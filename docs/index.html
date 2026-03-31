@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Atlas | Explore Popular Films</title>
+    <meta
+      name="description"
+      content="Browse popular films, compare titles in cards or tables, and filter the collection by year, country, and release period."
+    />
+    <script>
+      if ("scrollRestoration" in history) {
+        history.scrollRestoration = "manual";
+      }
+      if (location.hash) {
+        history.replaceState(null, "", location.pathname + location.search);
+      }
+      window.scrollTo(0, 0);
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="backdrop">
+      <div class="orb orb-one"></div>
+      <div class="orb orb-two"></div>
+      <div class="orb orb-three"></div>
+      <div class="grid-overlay"></div>
+      <div class="noise"></div>
+    </div>
+
+    <main class="page" id="appRoot">
+      <section class="hero shell">
+        <div class="hero-copy">
+          <span class="eyebrow">Movie Discovery</span>
+          <p class="hero-kicker">Movie Atlas</p>
+          <h1>
+            Explore films your way with <span>search</span>, filters, cards, and tables.
+          </h1>
+          <p>
+            Browse the collection at your own pace. Search for a title, filter by country or
+            decade, and switch between visual cards and a clean comparison table.
+          </p>
+
+          <div class="hero-meta">
+            <article class="mini-stat glass-card">
+              <span>Dataset size</span>
+              <strong id="heroFilmCount">0 films</strong>
+            </article>
+            <article class="mini-stat glass-card">
+              <span>Countries</span>
+              <strong id="heroCountryCount">0</strong>
+            </article>
+            <article class="mini-stat glass-card">
+              <span>Peak revenue</span>
+              <strong id="heroTopGross">$0</strong>
+            </article>
+          </div>
+        </div>
+
+        <aside class="hero-panel glass-card">
+          <div class="search-panel-header">
+            <div>
+              <p class="panel-label">Search and filter</p>
+              <h2>Start with any path you like</h2>
+            </div>
+            <p class="search-panel-note">Use search or filters to load the collection.</p>
+          </div>
+
+          <form class="search-form" id="searchForm">
+            <label class="search-label" for="searchInput">Film title or director</label>
+            <div class="search-row">
+              <input
+                id="searchInput"
+                type="search"
+                placeholder="Type a film title or a director"
+                autocomplete="off"
+              />
+              <button class="primary-button search-submit" id="searchButton" type="submit">
+                Search
+              </button>
+            </div>
+            <div class="search-actions">
+              <button class="ghost-button" id="resetButton" type="button">Reset</button>
+              <p id="searchHint">Search for a title or use filters below to open the collection.</p>
+            </div>
+          </form>
+
+          <div class="spotlight-panel">
+            <p class="panel-label">Spotlight</p>
+            <h3 id="spotlightTitle">Choose a way to explore</h3>
+            <p id="spotlightDescription">
+              Search for a title or activate filters like country and decade. The strongest match
+              from the current selection will appear here.
+            </p>
+            <div class="spotlight-grid">
+              <div>
+                <span>Director</span>
+                <strong id="spotlightDirector">Waiting for selection</strong>
+              </div>
+              <div>
+                <span>Year</span>
+                <strong id="spotlightYear">—</strong>
+              </div>
+              <div>
+                <span>Country</span>
+                <strong id="spotlightCountry">—</strong>
+              </div>
+              <div>
+                <span>Worldwide gross</span>
+                <strong id="spotlightGross">—</strong>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="controls-wrap shell">
+        <div class="controls glass-card">
+          <div class="controls-heading">
+            <div>
+              <span class="eyebrow">Display options</span>
+              <h2>Arrange the results your way</h2>
+            </div>
+            <div class="view-group">
+              <label>View</label>
+              <div class="view-switch" role="group" aria-label="Choose display mode">
+                <button
+                  class="view-button is-active"
+                  data-view="cards"
+                  type="button"
+                  aria-pressed="true"
+                >
+                  Cards
+                </button>
+                <button class="view-button" data-view="table" type="button" aria-pressed="false">
+                  Table
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label for="countryFilter">Country</label>
+            <select id="countryFilter">
+              <option value="all">All countries</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="decadeFilter">Decade</label>
+            <select id="decadeFilter">
+              <option value="all">All decades</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="sortSelect">Sort by</label>
+            <select id="sortSelect">
+              <option value="rank-asc">Rank: ascending</option>
+              <option value="gross-desc">Gross: highest first</option>
+              <option value="year-desc">Year: newest first</option>
+              <option value="year-asc">Year: oldest first</option>
+              <option value="title-asc">Title: A-Z</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats shell">
+        <article class="stat-card glass-card">
+          <span class="stat-label">Films shown</span>
+          <strong id="filmCount">0</strong>
+          <p>Dynamic count based on the active filters.</p>
+        </article>
+        <article class="stat-card glass-card">
+          <span class="stat-label">Countries represented</span>
+          <strong id="countryCount">0</strong>
+          <p>How many countries remain visible in the current view.</p>
+        </article>
+        <article class="stat-card glass-card">
+          <span class="stat-label">Highest visible gross</span>
+          <strong id="topGross">$0</strong>
+          <p>The largest worldwide revenue in the filtered dataset.</p>
+        </article>
+        <article class="stat-card glass-card">
+          <span class="stat-label">Average release year</span>
+          <strong id="averageYear">—</strong>
+          <p>A quick sense of how modern the visible selection is.</p>
+        </article>
+      </section>
+
+      <section class="featured shell" id="featuredSection">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Quick picks</span>
+            <h2>Best matches from the current search</h2>
+          </div>
+          <p id="featuredSummary">
+            Use search or filters first, then these highlight cards will appear here.
+          </p>
+        </div>
+        <div class="featured-grid" id="featuredGrid"></div>
+      </section>
+
+      <section class="results shell" id="results">
+        <div class="section-heading results-heading">
+          <div>
+            <span class="eyebrow">Explorer</span>
+            <h2>Browse the collection</h2>
+          </div>
+          <div class="results-info">
+            <p id="resultsSummary">Loading collection...</p>
+            <div class="active-filters" id="activeFilters"></div>
+          </div>
+        </div>
+
+        <div class="results-panel glass-card">
+          <div class="cards-view" id="cardsView"></div>
+
+          <div class="table-view hidden" id="tableView">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Film</th>
+                    <th>Year</th>
+                    <th>Director</th>
+                    <th>Country</th>
+                    <th>Worldwide Gross</th>
+                  </tr>
+                </thead>
+                <tbody id="filmsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="empty-state hidden" id="emptyState">
+            <h3>No films match these filters</h3>
+            <p>Try another film title or reset the filters to bring matching results back.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <template id="filmCardTemplate">
+      <article class="film-card glass-card">
+        <div class="film-card-top">
+          <span class="rank-badge"></span>
+          <span class="year-pill"></span>
+        </div>
+        <h3 class="film-title"></h3>
+        <p class="film-director"></p>
+        <div class="film-meta-row">
+          <span class="meta-chip film-country"></span>
+          <span class="meta-chip film-gross"></span>
+        </div>
+        <a class="film-link" target="_blank" rel="noreferrer">Open Wikipedia</a>
+      </article>
+    </template>
+
+    <template id="featuredCardTemplate">
+      <article class="featured-card glass-card">
+        <div class="featured-rank"></div>
+        <div class="featured-content">
+          <p class="featured-label">Worldwide gross</p>
+          <h3 class="featured-title"></h3>
+          <p class="featured-subtitle"></p>
+          <div class="featured-footer">
+            <span class="featured-country"></span>
+            <span class="featured-gross"></span>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script src="./script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+requests
+beautifulsoup4
+psycopg[binary]
+python-dotenv
+pandas
+jupyter
+nbformat
