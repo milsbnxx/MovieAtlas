@@ -83,6 +83,7 @@ function normalizeFilm(film) {
     (grossValue ? formatCurrency(grossValue) : "Unknown");
 
   const url = String(film.wikipedia_url ?? "").trim();
+  const searchText = normalizeSearchText(`${title} ${director}`);
 
   return {
     ...film,
@@ -95,6 +96,8 @@ function normalizeFilm(film) {
     grossValue,
     grossText,
     url,
+    searchText,
+    searchTokens: tokenizeSearchText(searchText),
     decade: releaseYear ? `${Math.floor(releaseYear / 10) * 10}s` : "Unknown",
   };
 }
@@ -142,6 +145,38 @@ function chooseGrossValue(rawValue, valueFromText) {
 
   const rawLooksBroken = rawValue > valueFromText * 5 || rawValue < valueFromText * 0.2;
   return rawLooksBroken ? valueFromText : rawValue;
+}
+
+function normalizeSearchText(value) {
+  return String(value ?? "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function tokenizeSearchText(value) {
+  const normalized = normalizeSearchText(value);
+  return normalized ? [...new Set(normalized.split(/\s+/).filter(Boolean))] : [];
+}
+
+function matchesFullText(film, query) {
+  const normalizedQuery = normalizeSearchText(query);
+
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  if (film.searchText.includes(normalizedQuery)) {
+    return true;
+  }
+
+  const queryTokens = tokenizeSearchText(normalizedQuery);
+  return queryTokens.every((token) =>
+    film.searchTokens.some((candidate) => candidate.includes(token))
+  );
 }
 
 async function loadFilms() {
@@ -196,16 +231,13 @@ function updateDatasetMeta(records) {
 }
 
 function getFilteredFilms() {
-  const searchValue = submittedSearch.toLowerCase();
+  const searchValue = submittedSearch;
   const countryValue = elements.country.value;
   const decadeValue = elements.decade.value;
   const sortValue = elements.sort.value;
 
   const filtered = films.filter((film) => {
-    const matchesSearch =
-      !searchValue ||
-      film.title.toLowerCase().includes(searchValue) ||
-      film.director.toLowerCase().includes(searchValue);
+    const matchesSearch = matchesFullText(film, searchValue);
     const matchesCountry = countryValue === "all" || film.countries.includes(countryValue);
     const matchesDecade = decadeValue === "all" || film.decade === decadeValue;
 
